@@ -1,37 +1,59 @@
 #include "../exercise.h"
-
-// READ: 左值右值（概念）<https://learn.microsoft.com/zh-cn/cpp/c-language/l-value-and-r-value-expressions?view=msvc-170>
-// READ: 左值右值（细节）<https://zh.cppreference.com/w/cpp/language/value_category>
-// READ: 关于移动语义 <https://learn.microsoft.com/zh-cn/cpp/cpp/rvalue-reference-declarator-amp-amp?view=msvc-170#move-semantics>
-// READ: 如果实现移动构造 <https://learn.microsoft.com/zh-cn/cpp/cpp/move-constructors-and-move-assignment-operators-cpp?view=msvc-170>
-
-// READ: 移动构造函数 <https://zh.cppreference.com/w/cpp/language/move_constructor>
-// READ: 移动赋值 <https://zh.cppreference.com/w/cpp/language/move_assignment>
-// READ: 运算符重载 <https://zh.cppreference.com/w/cpp/language/operators>
+#include <utility> // for std::move
 
 class DynFibonacci {
     size_t *cache;
     int cached;
+    int capacity;
 
 public:
-    // TODO: 实现动态设置容量的构造器
-    DynFibonacci(int capacity): cache(new ?), cached(?) {}
+    // 实现动态设置容量的构造器
+    DynFibonacci(int capacity) : cache(new size_t[capacity]{0, 1}), cached(2), capacity(capacity) {}
 
-    // TODO: 实现移动构造器
-    DynFibonacci(DynFibonacci &&) noexcept = delete;
+    // 实现移动构造器
+    DynFibonacci(DynFibonacci &&other) noexcept : cache(other.cache), cached(other.cached), capacity(other.capacity) {
+        other.cache = nullptr; // 源对象不再拥有资源
+        other.cached = 0;
+        other.capacity = 0;
+    }
 
-    // TODO: 实现移动赋值
-    // NOTICE: ⚠ 注意移动到自身问题 ⚠
-    DynFibonacci &operator=(DynFibonacci &&) noexcept = delete;
-
-    // TODO: 实现析构器，释放缓存空间
-    ~DynFibonacci();
-
-    // TODO: 实现正确的缓存优化斐波那契计算
-    size_t operator[](int i) {
-        for (; false; ++cached) {
-            cache[cached] = cache[cached - 1] + cache[cached - 2];
+    // 实现移动赋值
+    DynFibonacci &operator=(DynFibonacci &&other) noexcept {
+        if (this == &other) {
+            return *this; // 处理自我赋值
         }
+
+        delete[] cache; // 释放已有资源
+
+        // 移动资源
+        cache = other.cache;
+        cached = other.cached;
+        capacity = other.capacity;
+
+        other.cache = nullptr; // 源对象不再拥有资源
+        other.cached = 0;
+        other.capacity = 0;
+
+        return *this;
+    }
+
+    // 实现析构器，释放缓存空间
+    ~DynFibonacci() {
+        delete[] cache;
+    }
+
+    // 实现正确的缓存优化斐波那契计算
+    size_t operator[](int i) {
+        if (i < cached) {
+            return cache[i]; // 如果 i 已经在缓存中，直接返回
+        }
+
+        // 从已缓存的位置开始计算，直到计算到第 i 项
+        for (int j = cached; j <= i; ++j) {
+            cache[j] = cache[j - 1] + cache[j - 2];
+        }
+
+        cached = i + 1; // 更新已缓存的最大索引
         return cache[i];
     }
 

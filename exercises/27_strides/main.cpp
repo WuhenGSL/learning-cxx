@@ -7,7 +7,6 @@
 // 因此，一个连续张量，其第 n 维的步长为 1，第 n-1 维的步长为 dn，第 n-2 维的步长为 dn*dn-1，以此类推。
 // 例如，一个 2x3x4 张量，其步长为 [12, 4, 1]。
 
-// READ: 类型别名 <https://zh.cppreference.com/w/cpp/language/type_alias>
 using udim = unsigned int;
 
 /// @brief 计算连续存储张量的步长
@@ -15,11 +14,14 @@ using udim = unsigned int;
 /// @return 张量每维度的访问步长
 std::vector<udim> strides(std::vector<udim> const &shape) {
     std::vector<udim> strides(shape.size());
-    // TODO: 完成函数体，根据张量形状计算张量连续存储时的步长。
-    // READ: 逆向迭代器 std::vector::rbegin <https://zh.cppreference.com/w/cpp/container/vector/rbegin>
-    //       使用逆向迭代器可能可以简化代码
+    udim stride = 1;
+    for (size_t i = shape.size(); i-- > 0;) {  // 从最后一维到第0维逆序计算
+        strides[i] = stride;
+        stride *= shape[i];
+    }
     return strides;
 }
+
 
 // ---- 不要修改以下代码 ----
 int main(int argc, char **argv) {
